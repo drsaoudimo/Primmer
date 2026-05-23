@@ -1,0 +1,6 @@
+{
+  "name": "DPST Analyzer",
+  "description": "Scientific tool for analyzing integer structures and factorization based on Dynamic Prime Structure Theory.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
