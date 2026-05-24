@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import com.aistudio.dpst.analyzer.zxcvbn.dpst.DPSTEngine
 import com.aistudio.dpst.analyzer.zxcvbn.dpst.StructuralFingerprint
 import java.math.BigInteger
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 val BackgroundDark = Color(0xFF0A0A0C)
 val Indigo400 = Color(0xFF818CF8)
@@ -70,6 +73,7 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
     var result by remember { mutableStateOf<String?>(null) }
     var fingerprint by remember { mutableStateOf<StructuralFingerprint?>(null) }
     var derivative by remember { mutableStateOf(0.0) }
+    val scope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {
@@ -95,12 +99,19 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                val n = input.toBigIntegerOrNull()
-                if (n != null) {
-                    fingerprint = DPSTEngine.getFingerprint(n)
-                    derivative = DPSTEngine.calculateDerivative(n)
-                    val factors = DPSTEngine.factorizeAll(n)
-                    result = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "PRIME NUMBER"
+                scope.launch(Dispatchers.Default) {
+                    val n = input.toBigIntegerOrNull()
+                    if (n != null) {
+                        val f = DPSTEngine.getFingerprint(n)
+                        val d = DPSTEngine.calculateDerivative(n)
+                        val factors = DPSTEngine.factorizeAll(n)
+                        val res = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "PRIME NUMBER"
+                        withContext(Dispatchers.Main) {
+                            fingerprint = f
+                            derivative = d
+                            result = res
+                        }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
