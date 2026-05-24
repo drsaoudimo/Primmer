@@ -46,7 +46,7 @@ object DPSTEngine {
         
         // 1. Trial division for small factors
         var d = BigInteger.valueOf(2)
-        while (d.multiply(d) <= tempN && d < BigInteger.valueOf(1000)) {
+        while (d.multiply(d) <= tempN && d < BigInteger.valueOf(10000)) {
             while (tempN.remainder(d) == BigInteger.ZERO) {
                 factors.add(d)
                 tempN = tempN.divide(d)

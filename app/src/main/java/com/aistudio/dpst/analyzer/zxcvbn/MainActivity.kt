@@ -108,9 +108,13 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
                     isLoading = true
                     scope.launch(Dispatchers.Default) {
                         try {
+                            android.util.Log.d("DPST", "Starting calculation for $n")
                             val f = DPSTEngine.getFingerprint(n)
+                            android.util.Log.d("DPST", "Fingerprint done: $f")
                             val d = DPSTEngine.calculateDerivative(n)
+                            android.util.Log.d("DPST", "Derivative done: $d")
                             val factors = DPSTEngine.factorizeAll(n)
+                            android.util.Log.d("DPST", "Factors done: $factors")
                             val res = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "PRIME NUMBER"
                             withContext(Dispatchers.Main) {
                                 fingerprint = f
@@ -119,6 +123,7 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
                                 isLoading = false
                             }
                         } catch (e: Exception) {
+                            android.util.Log.e("DPST", "Error", e)
                             withContext(Dispatchers.Main) {
                                 result = "Error: ${e.message}"
                                 isLoading = false
@@ -141,6 +146,9 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
         
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Show fingerprint if available
         fingerprint?.let {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -153,19 +161,21 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
                         Text(it.toString(), style = MaterialTheme.typography.bodySmall, color = Slate100, maxLines = 1)
                     }
                 }
-                
-                result?.let { res ->
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        color = Emerald500.copy(alpha = 0.1f),
-                        border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.2f))
-                    ) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Text("FACTORS RESOLVED", style = MaterialTheme.typography.labelSmall, color = Emerald500)
-                            Text(text = res, style = MaterialTheme.typography.headlineMedium, color = Slate100)
-                        }
-                    }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        // Always try to show results
+        result?.let { res ->
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = Emerald500.copy(alpha = 0.1f),
+                border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.2f))
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text("FACTORS RESOLVED", style = MaterialTheme.typography.labelSmall, color = Emerald500)
+                    Text(text = res, style = MaterialTheme.typography.headlineMedium, color = Slate100)
                 }
             }
         }
