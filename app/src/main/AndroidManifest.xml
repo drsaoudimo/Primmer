@@ -6,7 +6,7 @@
         android:label="DPST Analyzer"
         android:theme="@style/Theme.DPST">
         <activity
-            android:name=".MainActivity"
+            android:name="com.aistudio.dpst.analyzer.zxcvbn.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.DPST">
             <intent-filter>
