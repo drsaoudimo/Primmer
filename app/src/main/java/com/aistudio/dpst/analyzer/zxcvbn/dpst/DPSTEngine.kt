@@ -2,16 +2,17 @@ package com.aistudio.dpst.analyzer.zxcvbn.dpst
 
 import java.math.BigInteger
 import java.security.SecureRandom
+import java.util.Locale
 import kotlin.math.abs
 
 data class StructuralFingerprint(
     val deltaQuadratic: String,
     val binaryDensity: Double,
     val carryEnergy: Double,
-    val structuralMetric: String
+    val structuralMetric: Double
 ) {
     override fun toString(): String =
-        "Δ: $deltaQuadratic | ρ: %.2f | Ec: %.2f | Sm: $structuralMetric".format(binaryDensity, carryEnergy)
+        String.format(Locale.US, "Δ: $deltaQuadratic | ρ: %.2f | Ec: %.2f | Sm: %.2f", deltaQuadratic, binaryDensity, carryEnergy, structuralMetric)
 }
 
 object DPSTEngine {
@@ -28,14 +29,14 @@ object DPSTEngine {
         
         val structuralMetric = (density * 100) + (1.0 / (delta.toDouble() + 1.0) * 10)
         
-        return StructuralFingerprint(delta.toString(), density, carryEnergy, "%.2f".format(structuralMetric))
+        return StructuralFingerprint(delta.toString(), density, carryEnergy, structuralMetric)
     }
 
     fun calculateDerivative(n: BigInteger): Double {
         val f1 = getFingerprint(n)
         val f2 = getFingerprint(n.add(BigInteger.ONE))
         
-        return abs(f1.structuralMetric.toDouble() - f2.structuralMetric.toDouble())
+        return abs(f1.structuralMetric - f2.structuralMetric)
     }
 
     // Modern factorization: Trial division for small factors, then Pollard's Rho
