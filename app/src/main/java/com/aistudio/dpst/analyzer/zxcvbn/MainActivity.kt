@@ -103,32 +103,42 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                val n = try { input.toBigInteger() } catch (e: Exception) { null }
-                if (n != null) {
-                    isLoading = true
-                    scope.launch(Dispatchers.Default) {
-                        try {
-                            android.util.Log.d("DPST", "Starting calculation for $n")
-                            val f = DPSTEngine.getFingerprint(n)
-                            android.util.Log.d("DPST", "Fingerprint done: $f")
-                            val d = DPSTEngine.calculateDerivative(n)
-                            android.util.Log.d("DPST", "Derivative done: $d")
-                            val factors = DPSTEngine.factorizeAll(n)
-                            android.util.Log.d("DPST", "Factors done: $factors")
-                            val res = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "PRIME NUMBER"
-                            withContext(Dispatchers.Main) {
-                                fingerprint = f
-                                derivative = d
-                                result = res
-                                isLoading = false
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.e("DPST", "Error", e)
-                            withContext(Dispatchers.Main) {
-                                result = "Error: ${e.message}"
-                                isLoading = false
+                result = null
+                fingerprint = null
+                
+                val cleanedInput = input.filter { it.isDigit() }
+                if (cleanedInput.isEmpty()) {
+                    result = "Error: Input format invalid"
+                } else {
+                    val n = try { BigInteger(cleanedInput) } catch (e: Exception) { null }
+                    if (n != null) {
+                        isLoading = true
+                        scope.launch(Dispatchers.Default) {
+                            try {
+                                android.util.Log.d("DPST", "Starting calculation for $n")
+                                val f = DPSTEngine.getFingerprint(n)
+                                android.util.Log.d("DPST", "Fingerprint done: $f")
+                                val d = DPSTEngine.calculateDerivative(n)
+                                android.util.Log.d("DPST", "Derivative done: $d")
+                                val factors = DPSTEngine.factorizeAll(n)
+                                android.util.Log.d("DPST", "Factors done: $factors")
+                                val res = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "PRIME NUMBER"
+                                withContext(Dispatchers.Main) {
+                                    fingerprint = f
+                                    derivative = d
+                                    result = res
+                                    isLoading = false
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("DPST", "Error", e)
+                                withContext(Dispatchers.Main) {
+                                    result = "Error: ${e.message}"
+                                    isLoading = false
+                                }
                             }
                         }
+                    } else {
+                        result = "Error: Unable to parse number"
                     }
                 }
             },
