@@ -1,10 +1,11 @@
 <resources>
     <string name="app_name">محلل العوامل الأولية</string>
     <string name="terminal_title">نافذة تحليل العوامل الأولية</string>
-    <string name="subtitle">تحليل دقيق للأعداد</string>
+    <string name="subtitle">تحليل دقيق للأعداد عبر المصفوفة الساعودية</string>
     <string name="input_label">أدخل العدد [N]</string>
     <string name="action_button">تحليل العدد</string>
-    <string name="result_label">العوامل الأولية المكتشفة</string>
-    <string name="error_invalid_input">يرجى إدخال عدد صحيح صالح</string>
-    <string name="copy_to_clipboard">نسخ</string>
+    <string name="result_label">العوامل الأولية</string>
+    <string name="error_invalid_input">يرجى إدخال عدد صحيح موجب</string>
+    <string name="copy_to_clipboard">نسخ العوامل</string>
+    <string name="copied_to_clipboard">تم النسخ</string>
 </resources>

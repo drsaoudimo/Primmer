@@ -89,6 +89,7 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {
             Text(stringResource(R.string.terminal_title), style = MaterialTheme.typography.labelSmall, color = Color(0xFF6366F1))
             Text(stringResource(R.string.subtitle), style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
+            Text("مفعل: التحليل الموجه بالمصفوفة (Saoudi Matrix)", style = MaterialTheme.typography.labelSmall, color = Color(0xFF10B981))
         }
 
         OutlinedTextField(
@@ -111,26 +112,29 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
                 if (cleanedInput.isEmpty()) {
                     result = context.getString(R.string.error_invalid_input)
                 } else {
-                    val n = try { BigInteger(cleanedInput) } catch (e: Exception) { null }
-                    if (n != null) {
-                        isLoading = true
-                        scope.launch(Dispatchers.Default) {
-                            try {
+                    isLoading = true
+                    scope.launch(Dispatchers.Default) {
+                        try {
+                            val n = try { BigInteger(cleanedInput) } catch (e: Exception) { null }
+                            if (n != null) {
                                 val factors = DPSTEngine.factorizeAll(n)
-                                val res = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "PRIME NUMBER"
+                                val res = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "عدد أولي"
                                 withContext(Dispatchers.Main) {
                                     result = res
                                     isLoading = false
                                 }
-                            } catch (e: Exception) {
+                            } else {
                                 withContext(Dispatchers.Main) {
-                                    result = "Error: ${e.message}"
+                                    result = context.getString(R.string.error_invalid_input)
                                     isLoading = false
                                 }
                             }
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                result = "Error: ${e.message}"
+                                isLoading = false
+                            }
                         }
-                    } else {
-                        result = context.getString(R.string.error_invalid_input)
                     }
                 }
             },
@@ -162,7 +166,7 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val clip = ClipData.newPlainText("Factors", res)
                         clipboard.setPrimaryClip(clip)
-                        Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show()
                     }) {
                         Icon(Icons.Filled.ContentCopy, contentDescription = stringResource(R.string.copy_to_clipboard), tint = Color(0xFF64748B))
                     }
