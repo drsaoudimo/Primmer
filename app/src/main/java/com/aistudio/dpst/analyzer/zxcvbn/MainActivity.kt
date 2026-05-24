@@ -100,16 +100,22 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
         Button(
             onClick = {
                 scope.launch(Dispatchers.Default) {
-                    val n = input.toBigIntegerOrNull()
+                    val n = try { input.toBigInteger() } catch (e: Exception) { null }
                     if (n != null) {
-                        val f = DPSTEngine.getFingerprint(n)
-                        val d = DPSTEngine.calculateDerivative(n)
-                        val factors = DPSTEngine.factorizeAll(n)
-                        val res = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "PRIME NUMBER"
-                        withContext(Dispatchers.Main) {
-                            fingerprint = f
-                            derivative = d
-                            result = res
+                        try {
+                            val f = DPSTEngine.getFingerprint(n)
+                            val d = DPSTEngine.calculateDerivative(n)
+                            val factors = DPSTEngine.factorizeAll(n)
+                            val res = if (factors.isNotEmpty()) factors.joinToString(" × ") { it.toString() } else "PRIME NUMBER"
+                            withContext(Dispatchers.Main) {
+                                fingerprint = f
+                                derivative = d
+                                result = res
+                            }
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                result = "Error: ${e.message}"
+                            }
                         }
                     }
                 }
