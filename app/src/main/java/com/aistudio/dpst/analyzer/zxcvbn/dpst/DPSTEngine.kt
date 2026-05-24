@@ -1,9 +1,8 @@
 package com.aistudio.dpst.analyzer.zxcvbn.dpst
 
 import java.math.BigInteger
+import java.security.SecureRandom
 import kotlin.math.abs
-import kotlin.math.sqrt
-import kotlin.math.pow
 
 data class StructuralFingerprint(
     val deltaQuadratic: String,
@@ -16,8 +15,10 @@ data class StructuralFingerprint(
 }
 
 object DPSTEngine {
+    private val rand = SecureRandom()
+
     fun getFingerprint(n: BigInteger): StructuralFingerprint {
-        val root = sqrtBigInt(n)
+        val root = n.sqrt()
         val delta = root.pow(2).subtract(n).abs()
         
         val binaryString = n.toString(2)
@@ -37,43 +38,71 @@ object DPSTEngine {
         return abs(f1.structuralMetric.toDouble() - f2.structuralMetric.toDouble())
     }
 
-    private fun sqrtBigInt(n: BigInteger): BigInteger {
-        if (n < BigInteger.ZERO) throw IllegalArgumentException("Negative number")
-        if (n == BigInteger.ZERO || n == BigInteger.ONE) return n
-        var x = n.divide(BigInteger.valueOf(2))
-        var prevX: BigInteger
-        do {
-            prevX = x
-            x = n.divide(x).add(x).divide(BigInteger.valueOf(2))
-        } while (x.subtract(prevX).abs() > BigInteger.ONE)
-        return x
-    }
-    
+    // Modern factorization: Trial division for small factors, then Pollard's Rho
     fun factorizeAll(n: BigInteger): List<BigInteger> {
         if (n < BigInteger.valueOf(2)) return emptyList()
         val factors = mutableListOf<BigInteger>()
         var tempN = n
         
-        // 1. تقسيم العوامل الأولية الصغيرة (تحسين السرعة)
+        // 1. Trial division for small factors
         var d = BigInteger.valueOf(2)
-        while (d.multiply(d) <= tempN) {
+        while (d.multiply(d) <= tempN && d < BigInteger.valueOf(1000)) {
             while (tempN.remainder(d) == BigInteger.ZERO) {
                 factors.add(d)
                 tempN = tempN.divide(d)
             }
             d = d.add(BigInteger.ONE)
-            
-            // DPST Optimization: إضافة قيد زمني أو منطقي إذا لزم الأمر
-            if (d > BigInteger.valueOf(10000) && tempN > BigInteger.ONE) {
-                // إذا لم نجد عوامل صغيرة، نفترض أن المتبقي أولي أو يتطلب بحثاً بنيوياً
-                break
-            }
         }
         
+        // 2. Pollard's Rho algorithm for larger factors
         if (tempN > BigInteger.ONE) {
-            factors.add(tempN)
+            recursivePollardRho(tempN, factors)
         }
         
-        return factors
+        return factors.sorted()
     }
+
+    private fun recursivePollardRho(n: BigInteger, factors: MutableList<BigInteger>) {
+        if (n == BigInteger.ONE) return
+        if (n.isProbablePrime(10)) {
+            factors.add(n)
+            return
+        }
+        
+        var d = pollardRho(n)
+        recursivePollardRho(d, factors)
+        recursivePollardRho(n.divide(d), factors)
+    }
+
+    private fun pollardRho(n: BigInteger): BigInteger {
+        if (n.remainder(BigInteger.valueOf(2)) == BigInteger.ZERO) return BigInteger.valueOf(2)
+        
+        var x = BigInteger(n.bitLength(), rand).mod(n)
+        var y = x
+        var c = BigInteger(n.bitLength(), rand).mod(n)
+        var d = BigInteger.ONE
+        
+        while (d == BigInteger.ONE) {
+            x = (x.multiply(x).mod(n).add(c)).mod(n)
+            y = (y.multiply(y).mod(n).add(c)).mod(n)
+            y = (y.multiply(y).mod(n).add(c)).mod(n)
+            d = x.subtract(y).abs().gcd(n)
+            
+            if (d == n) return pollardRho(n) // Failure, retry
+        }
+        return d
+    }
+}
+
+// Extension to use native sqrt if available (API 33+), otherwise fallback
+fun BigInteger.sqrt(): BigInteger {
+    if (this < BigInteger.ZERO) throw IllegalArgumentException("Negative number")
+    if (this == BigInteger.ZERO || this == BigInteger.ONE) return this
+    var x = this.divide(BigInteger.valueOf(2))
+    var prevX: BigInteger
+    do {
+        prevX = x
+        x = this.divide(x).add(x).divide(BigInteger.valueOf(2))
+    } while (x.subtract(prevX).abs() > BigInteger.ONE)
+    return x
 }

@@ -8,17 +8,19 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.aistudio.dpst.analyzer.zxcvbn.dpst.DPSTEngine
 import com.aistudio.dpst.analyzer.zxcvbn.dpst.StructuralFingerprint
-import java.math.BigInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.BigInteger
 
 val BackgroundDark = Color(0xFF0A0A0C)
 val Indigo400 = Color(0xFF818CF8)
@@ -73,12 +75,13 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
     var result by remember { mutableStateOf<String?>(null) }
     var fingerprint by remember { mutableStateOf<StructuralFingerprint?>(null) }
     var derivative by remember { mutableStateOf(0.0) }
+    var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {
             Text("DPST TERMINAL", style = MaterialTheme.typography.labelSmall, color = Indigo400)
-            Text("Structural Anatomy Analyzer v1.1.0", style = MaterialTheme.typography.bodySmall, color = Slate500)
+            Text("Structural Anatomy Analyzer v1.2.0", style = MaterialTheme.typography.bodySmall, color = Slate500)
         }
 
         GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -88,6 +91,7 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
                 onValueChange = { input = it },
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 textStyle = MaterialTheme.typography.headlineMedium.copy(color = Slate100),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Indigo500,
                     unfocusedBorderColor = Color.Transparent
@@ -99,9 +103,10 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                scope.launch(Dispatchers.Default) {
-                    val n = try { input.toBigInteger() } catch (e: Exception) { null }
-                    if (n != null) {
+                val n = try { input.toBigInteger() } catch (e: Exception) { null }
+                if (n != null) {
+                    isLoading = true
+                    scope.launch(Dispatchers.Default) {
                         try {
                             val f = DPSTEngine.getFingerprint(n)
                             val d = DPSTEngine.calculateDerivative(n)
@@ -111,10 +116,12 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
                                 fingerprint = f
                                 derivative = d
                                 result = res
+                                isLoading = false
                             }
                         } catch (e: Exception) {
                             withContext(Dispatchers.Main) {
                                 result = "Error: ${e.message}"
+                                isLoading = false
                             }
                         }
                     }
@@ -122,9 +129,14 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Indigo600)
+            colors = ButtonDefaults.buttonColors(containerColor = Indigo600),
+            enabled = !isLoading
         ) {
-            Text("DECONSTRUCT FIELD", style = MaterialTheme.typography.labelLarge)
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text("DECONSTRUCT FIELD", style = MaterialTheme.typography.labelLarge)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -159,4 +171,3 @@ fun DPSTAnalyzerScreen(modifier: Modifier = Modifier) {
         }
     }
 }
-fun String.toBigIntegerOrNull(): BigInteger? = try { this.toBigInteger() } catch (e: Exception) { null }
