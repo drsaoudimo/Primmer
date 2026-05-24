@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">DPST Analyzer</string>
+    <string name="app_name">محلل العوامل الأولية</string>
+    <string name="terminal_title">نافذة تحليل العوامل الأولية</string>
+    <string name="subtitle">تحليل دقيق للأعداد</string>
+    <string name="input_label">أدخل العدد [N]</string>
+    <string name="action_button">تحليل العدد</string>
+    <string name="result_label">العوامل الأولية المكتشفة</string>
+    <string name="error_invalid_input">يرجى إدخال عدد صحيح صالح</string>
+    <string name="copy_to_clipboard">نسخ</string>
 </resources>
